@@ -1,0 +1,43 @@
+Россия #!\ Russia
+Советский союз #!\ The Soviet Union
+Украина #!\ Ukraine
+Германия #!\ Germany
+Сербия #!\ Serbia
+Франция #!\ France
+Испания #!\ Spain
+Португалия #!\ Portugal
+Казахстан #!\ Kazakhstan
+Таджикистан #!\ Tajikistan
+Узбекистан #!\ Uzbekistan
+Туркменистан #!\ Turkmenistan
+Афганистан #!\ Afghanistan
+Пакистан #!\ Pakistan
+Индия #!\ India
+Китай #!\ China
+Япония #!\ Japan
+США #!\ USA
+ОАЭ #!\ UAE
+Саудовская Аравия #!\ Saudi Arabia
+Беларусь #!\ Belarus
+Финляндия #!\ Finland
+Швеция #!\ Sweden
+Норвегия #!\ Norway
+Польша #!\ Poland
+Черногория #!\ Montenegro
+Босния и Герцеговина #!\ Bosnia and Herzegovina
+Албания #!\ Albania
+Греция #!\ Greece
+Болгария #!\ Bulgaria
+Молдавия #!\ Moldavia
+Чехия #!\ Czechia
+Словения #!\ Slovenia
+Словакия #!\ Slovakia
+Швейцария #!\ Switzerland
+Люксембург #!\ Luxembourg
+Бельгия #!\ Belgium
+Нидерланды #!\ Netherlands
+Великобритания #!\ Great Britain
+Турция #!\ Turkey
+Лихтенштейн #!\ Lichtenstein
+Дания #!\ Denmark
+Кыргызстан #!\ Kyrgyzstan
