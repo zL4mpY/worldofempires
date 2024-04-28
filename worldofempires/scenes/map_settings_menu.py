@@ -8,7 +8,7 @@ from engine import get_base_dir
 
 import pygame
 
-class GameProcessSettingsMenuScene(Scene):
+class MapSettingsMenuScene(Scene):
     def __init__(self, game, name):
         super().__init__(game, name)
         
@@ -78,13 +78,67 @@ class GameProcessSettingsMenuScene(Scene):
         self.textinputboxes.append(textinputbox)
         self.objects.append(textinputbox)
         del textinputbox
+
+        label = Label(game=self.game,
+                      scene=self,
+                      x=self.game.width / 2 - 100, y= self.game.height / 2 + 20,
+                      text="Map width:",
+                      font="Arial", fontsize=24,
+                      color=(0, 0, 0),
+                      align="c")
+        
+        self.labels.append(label)
+        self.objects.append(label)
+        del label
+        
+        textinputbox = TextInputBox(game=self.game,
+                                    scene=self,
+                                    x=self.game.width / 2 - 25, y = self.game.height / 2 + 15,
+                                    width = 30, height = 25,
+                                    defaulttext=str(self.game.width * 2), textcolor=(0, 0, 0), textlimit=4,
+                                    font='Arial', fontsize=24,
+                                    boxcolor=(235, 235, 235),
+                                    activecolor=(255, 255, 255),
+                                    align='c', allowedchars='0123456789')
+        
+        self.textinputboxes.append(textinputbox)
+        self.objects.append(textinputbox)
+        del textinputbox
+        
+        label = Label(game=self.game,
+                      scene=self,
+                      x=self.game.width / 2 - 100, y= self.game.height / 2 + 70,
+                      text="Map height:",
+                      font="Arial", fontsize=24,
+                      color=(0, 0, 0),
+                      align="c")
+        
+        self.labels.append(label)
+        self.objects.append(label)
+        del label
+        
+        textinputbox = TextInputBox(game=self.game,
+                                    scene=self,
+                                    x=self.game.width / 2 - 20, y = self.game.height / 2 + 66,
+                                    width = 30, height = 25,
+                                    defaulttext=str(self.game.height * 2), textcolor=(0, 0, 0), textlimit=4,
+                                    font='Arial', fontsize=24,
+                                    boxcolor=(235, 235, 235),
+                                    activecolor=(255, 255, 255),
+                                    align='c', allowedchars='0123456789')
+        
+        self.textinputboxes.append(textinputbox)
+        self.objects.append(textinputbox)
+        del textinputbox
             
         # buttons
         
         def onclick():
             def start_game():
                 self.game.sceneManager.get_scene('game_process').settings = {'countries': {'min_value': int(self.textinputboxes[0].get_value()),
-                                                                                           'max_value': int(self.textinputboxes[1].get_value())}}
+                                                                                           'max_value': int(self.textinputboxes[1].get_value())},
+                                                                             'map': {'width': int(self.textinputboxes[2].get_value()),
+                                                                                     'height': int(self.textinputboxes[3].get_value())}}
                 self.game.sceneManager.switch_scene("game_process")
             
             self.game.sceneManager.get_scene('loading_screen').custom_action = start_game
@@ -93,18 +147,36 @@ class GameProcessSettingsMenuScene(Scene):
         # play_btn
         button = Button(game=self.game,
                         scene=self,
-                        x=self.game.width / 2, y=self.game.height-120,
-                        width=200, height=75,
+                        x=self.game.width / 2, y=self.game.height-180,
+                        width=200, height=50,
                         text='Start',
                         scale=1,
                         align="center",
                         font=self.game.settingsManager.settings.get('font'),
                         fontsize=25,
                         onclick=onclick,
-                        multipress=False,
-                        normalimage=pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "start_button.png", ""),
-                        hoverimage=pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "start_button_hovered.png", ""),
-                        pressedimage=pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "start_button_pressed.png", ""),
+                        multipress=False
+        )
+        
+        self.buttons.append(button)
+        self.objects.append(button)
+
+        del onclick
+        
+        def onclick():
+            self.game.sceneManager.switch_scene("menu")
+        
+        button = Button(game=self.game,
+                        scene=self,
+                        x=self.game.width / 2, y=self.game.height-100,
+                        width=200, height=50,
+                        text='Menu',
+                        scale=1,
+                        align="center",
+                        font=self.game.settingsManager.settings.get('font'),
+                        fontsize=25,
+                        onclick=onclick,
+                        multipress=False
         )
 
         self.buttons.append(button)
@@ -112,24 +184,11 @@ class GameProcessSettingsMenuScene(Scene):
 
         del onclick
         
-        # test_btn
-        # button = Button(game=self.game,
-        #                 scene=self,
-        #                 x=540, y=400,
-        #                 width=200, height=75,
-        #                 text='Test Button',
-        #                 font=self.game.settingsManager.settings.get('font'),
-        #                 fontsize=25,
-        #                 onclick=lambda: print("test button"),
-        #                 multipress=False)
-        
-        # labels
-        
         # version_lbl
         label = Label(game=self.game,
                       scene=self,
                       x=10, y=self.game.height - 10,
-                      text="v0.0.5 ALPHA",
+                      text=f"v{self.game.get_version()}",
                       font="Arial",
                       fontsize=20,
                       color=(0, 0, 0),
@@ -156,7 +215,6 @@ class GameProcessSettingsMenuScene(Scene):
     def render(self):
         self.screen.fill((150, 150, 150))
         self.terrain.render()
-        # self.imageManager.render(self.screen, self.menu_bg, 0, 0, 1, align="tl")
         self.imageManager.render(self.screen, self.logo, 150, 10, 1)
         
         for object in self.objects:

@@ -19,6 +19,8 @@ class King(engine.BaseObject):
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()
         self.rect.x, self.rect.y = x,y
+        self.camerarect = self.surface.get_rect()
+        self.camerarect.x, self.camerarect.y = x,y
         
         self.step = original_step_size
 
@@ -37,8 +39,10 @@ class King(engine.BaseObject):
         
         self.directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     
-    def render(self):
-        self.screen.blit(self.surface, self.rect)
+    def render(self, add_x=0, add_y=0):
+        self.screen.blit(self.surface, (self.rect.x + add_x, self.rect.y + add_y))
+        self.camerarect.x = self.rect.x + add_x
+        self.camerarect.y = self.rect.y + add_y
     
     def act(self):
         if self.states['return_to_homeland']:
@@ -61,9 +65,9 @@ class King(engine.BaseObject):
             self.hp = self.max_hp if self.hp > self.max_hp else self.hp
 
     def can_move(self, pos):
-        if pos.x < 0 or pos.x + self.rect.width > self.screen.get_width():
+        if pos.x < 0 or pos.x + self.rect.width > self.scene.terrain.width:
             return False  # Check if the position is outside the screen
-        if pos.y < 0 or pos.y + self.rect.height > self.screen.get_height():
+        if pos.y < 0 or pos.y + self.rect.height > self.scene.terrain.height:
             return False  # Check if the position is outside the screen
         terrain_color = self.scene.terrain.get_at((pos.x, pos.y))  # Get the terrain color at the new position
         
@@ -119,8 +123,17 @@ class King(engine.BaseObject):
             self.step = original_step_size
 
         direction = random.choice(self.directions)
-        new_x = math.ceil(direction[0] * self.step * self.game.dt) if direction[0] > 0 else math.floor(direction[0] * self.step * self.game.dt)
-        new_y = math.ceil(direction[1] * self.step * self.game.dt) if direction[1] > 0 else math.floor(direction[1] * self.step * self.game.dt)
+        new_x = math.ceil(direction[0] * self.step * self.game.dt) if direction[0] > 0 else math.floor(direction[0] * self.step)
+        new_y = math.ceil(direction[1] * self.step * self.game.dt) if direction[1] > 0 else math.floor(direction[1] * self.step)
+        
+        if new_x > 1:
+            new_x = 1
+        elif new_x < -1:
+            new_x = -1
+        if new_y > 1:
+            new_y = 1
+        elif new_y < -1:
+            new_y = -1
         
         new_pos = self.rect.move(new_x, new_y)  # Calculate the new position
         if self.can_move(new_pos):  # Check if the new position is valid

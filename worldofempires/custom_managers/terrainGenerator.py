@@ -33,9 +33,10 @@ class Terrain():
         self.rect.topleft = (x, y)
         self.width, self.height = width, height
     
-    def render(self):
-        # self.screen.blit(self.landscape, self.rect)
-        self.screen.blit(self.landscape, self.rect)
+    def render(self, add_x=0, add_y=0):
+        # print(self.rect.x, self.rect.x + add_x)
+        # print(self.width)
+        self.screen.blit(self.landscape, (self.rect.x + add_x, self.rect.y + add_y))
     
     def get_at(self, coordinates: tuple):
         if coordinates[0] > self.width or coordinates[0] < 0:

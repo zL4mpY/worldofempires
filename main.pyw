@@ -1,7 +1,8 @@
 from worldofempires.scenes.main_game import GameScene
 from worldofempires.scenes.main_menu import MenuScene
 from worldofempires.scenes.loading_screen import LoadingScene
-from worldofempires.scenes.game_process_settings_menu import GameProcessSettingsMenuScene
+from worldofempires.scenes.map_settings_menu import MapSettingsMenuScene
+from worldofempires.scenes.game_settings_menu import GameSettingsMenuScene
 import engine
 import pygame
 
@@ -13,6 +14,7 @@ class Game(engine.LumixGame):
  
         self.settingsManager.load_settings(path="settings.json")
         self.is_devmode = self.settingsManager.get("dev_mode")
+        self.VERSION = "0.0.6 ALPHA"
 
         self.set_resolution(self.settingsManager.get_resolution())
         self.fps = self.settingsManager.get_fps()
@@ -30,12 +32,12 @@ class Game(engine.LumixGame):
         
         icon = pygame.image.load(BASE_DIR / 'icon.ico')
         self.set_icon(icon)
-        
 
         # LOADING SCENES
 
         self.sceneManager.add_scene("game_process", GameScene(self, "game_process"))
-        self.sceneManager.add_scene("game_process_settings_menu", GameProcessSettingsMenuScene(self, "game_process_settings_menu"))
+        self.sceneManager.add_scene("map_settings_menu", MapSettingsMenuScene(self, "map_settings_menu"))
+        self.sceneManager.add_scene("game_settings_menu", GameSettingsMenuScene(self, "game_settings_menu"))
         self.sceneManager.add_scene("loading_screen", LoadingScene(self, "loading_screen", None))
         self.sceneManager.add_scene("menu", MenuScene(self, "menu"))
         
@@ -51,6 +53,9 @@ class Game(engine.LumixGame):
         self.settingsManager.save_settings()
         
         self.restart()
+    
+    def get_version(self):
+        return self.VERSION
 
     def run(self) -> None:
         super().run()

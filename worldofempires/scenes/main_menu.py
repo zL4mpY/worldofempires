@@ -15,7 +15,7 @@ class MenuScene(Scene):
         self.objects = []
         self.buttons = []
         
-        self.imageManager = self.game.imageManager
+        # self.imageManager = self.game.imageManager
         self.terrainGenerator = TerrainGenerator(self.game, self)
         self.logo = pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "logo.png", "")
         self.menu_bg = pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "menu_bg.png", "")
@@ -25,16 +25,16 @@ class MenuScene(Scene):
     
     def draw_objects(self):
         def onclick():
-            self.game.sceneManager.get_scene("game_process_settings_menu").terrain = self.terrain
-            self.game.sceneManager.switch_scene("game_process_settings_menu")
+            self.sceneManager.get_scene("map_settings_menu").terrain = self.terrain
+            self.sceneManager.switch_scene("map_settings_menu")
             
         # buttons
         
         # play_btn
         button = Button(game=self.game,
                         scene=self,
-                        x=self.game.width / 2, y=350,
-                        width=200, height=75,
+                        x=self.game.width / 2, y=self.game.height / 2 + 20,
+                        width=200, height=50,
                         text='Play',
                         scale=1,
                         align="center",
@@ -42,26 +42,35 @@ class MenuScene(Scene):
                         fontsize=25,
                         onclick=onclick,
                         multipress=False,
-                        normalimage=pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "start_button.png", ""),
-                        hoverimage=pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "start_button_hovered.png", ""),
-                        pressedimage=pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "start_button_pressed.png", ""),
         )
 
         self.buttons.append(button)
         self.objects.append(button)
 
         del onclick
+        del button
+        
+        def onclick():
+            self.sceneManager.get_scene("game_settings_menu").terrain = self.terrain
+            self.sceneManager.switch_scene('game_settings_menu')
         
         # test_btn
-        # button = Button(game=self.game,
-        #                 scene=self,
-        #                 x=540, y=400,
-        #                 width=200, height=75,
-        #                 text='Test Button',
-        #                 font=self.game.settingsManager.settings.get('font'),
-        #                 fontsize=25,
-        #                 onclick=lambda: print("test button"),
-        #                 multipress=False)
+        button = Button(game=self.game,
+                        scene=self,
+                        x=self.game.width / 2, y=self.game.height / 2 + 120,
+                        width=200, height=50,
+                        text='Settings',
+                        font=self.game.settingsManager.settings.get('font'),
+                        fontsize=25,
+                        onclick=onclick,
+                        multipress=False,
+                        align='center')
+
+        self.buttons.append(button)
+        self.objects.append(button)
+
+        del onclick
+        del button
         
         # labels
         
@@ -69,7 +78,7 @@ class MenuScene(Scene):
         label = Label(game=self.game,
                       scene=self,
                       x=10, y=self.game.height - 10,
-                      text="v0.0.5 ALPHA",
+                      text=f"v{self.game.get_version()}",
                       font="Arial",
                       fontsize=20,
                       color=(0, 0, 0),

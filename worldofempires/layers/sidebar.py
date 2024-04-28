@@ -48,14 +48,15 @@ class Sidebar():
         return self.objects[id]
     
     def update(self):
-        for object in self.objects.values():
-            from engine.classes.button import Button
-            if isinstance(object, Button):
-                object.handle_event()
-        
-        object = self.get_object(2)
-        if 0 < len(object.scene.chosen_countries) < len(object.scene.countries):
-            object.change_text("Select all")
+        if self.is_visible:
+            for object in self.objects.values():
+                from engine.classes.button import Button
+                if isinstance(object, Button):
+                    object.handle_event()
+            
+            object = self.get_object(2)
+            if 0 < len(object.scene.chosen_countries) < len(object.scene.countries):
+                object.change_text("Select all")
         
         self.open_btn.handle_event()
     

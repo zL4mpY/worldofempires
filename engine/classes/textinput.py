@@ -148,6 +148,4 @@ class TextInputBox():
         self.screen.blit(self.bgsurface, (self.bgrect.x+5, self.bgrect.y+5))
         self.screen.blit(self.surface, (self.rect.x+5, self.rect.y+5))
         self.screen.blit(text_surface, (self.rect.x+10, self.rect.y+5))
-
-        pygame.display.flip()
         

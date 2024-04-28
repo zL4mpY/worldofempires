@@ -57,6 +57,7 @@ class Scene:
         self.eventManager = self.game.eventManager
         self.textManager = self.game.textManager
         self.imageManager = self.game.imageManager
+        self.dt = self.game.dt
         
         self.name = name
         

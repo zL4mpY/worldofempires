@@ -27,6 +27,8 @@ class Human(engine.BaseObject):
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()
         self.rect.x, self.rect.y = x,y
+        self.camerarect = self.surface.get_rect()
+        self.camerarect.x, self.camerarect.y = x,y
         
         self.step = original_step_size
 
@@ -48,8 +50,10 @@ class Human(engine.BaseObject):
         
         self.directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     
-    def render(self):
-        self.screen.blit(self.surface, self.rect)
+    def render(self, add_x=0, add_y=0):
+        self.screen.blit(self.surface, (self.rect.x + add_x, self.rect.y + add_y))
+        self.camerarect.x = self.rect.x + add_x
+        self.camerarect.y = self.rect.y + add_y
     
     def act_war(self):
         war = self.states['current_war']
@@ -88,10 +92,11 @@ class Human(engine.BaseObject):
                             else:
                                 enemy_country.destroy(self.country)
             
-                print(f'[DEBUG] {self.country} Human: {enemy_country=}')
+                # print(f'[DEBUG] {self.country} Human: {enemy_country=}')
             
             if "war_enemy_country" in self.temp_states:
-                print(f'[DEBUG] {self.country} Human: {self.temp_states["war_enemy_country"]=}')
+                pass
+                # print(f'[DEBUG] {self.country} Human: {self.temp_states["war_enemy_country"]=}')
                 
     def act(self):
         if self.states['current_war'] != None:
@@ -134,9 +139,9 @@ class Human(engine.BaseObject):
                 self.hp = self.max_hp if self.hp > self.max_hp else self.hp
 
     def can_move(self, pos):
-        if pos.x < 0 or pos.x + self.rect.width > self.screen.get_width():
+        if pos.x < 0 or pos.x + self.rect.width > self.scene.terrain.width:
             return False  # Check if the position is outside the screen
-        if pos.y < 0 or pos.y + self.rect.height > self.screen.get_height():
+        if pos.y < 0 or pos.y + self.rect.height > self.scene.terrain.height:
             return False  # Check if the position is outside the screen
         terrain_color = self.scene.terrain.get_at((pos.x, pos.y))  # Get the terrain color at the new position
         

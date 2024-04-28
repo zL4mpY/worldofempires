@@ -5,7 +5,7 @@ from engine.managers.imageManager import ImageManager
 from engine.managers.textManager import TextManager
 from engine.managers.eventManager import EventManager, Event, get_pygame_key
 from engine.managers.displayManager import DisplayManager
-# from engine.managers.crashManager import CrashManager
+from engine.managers.cameraManager import CameraManager
 
 from pathlib import Path
 import pygame
@@ -27,6 +27,47 @@ def in_dict(item, dict):
         if key == item:
             return True
     return False
+
+def get_align(align: str) -> str:
+    if align == "c":
+        align = 'center'
+    elif align == 't':
+        align = 'top'
+    elif align == 'b':
+        align = 'b'
+    elif align == 'l':
+        align = 'left'
+    elif align == 'r':
+        align = 'right'
+    elif align == 'tl':
+        align = 'topleft'
+    elif align == 'tr':
+        align = 'topright'
+    elif align == 'bl':
+        align = 'bottomleft'
+    elif align == 'br':
+        align = 'bottomright'
+    elif align == 'cl':
+        align = 'centerleft'
+    elif align == 'cr':
+        align = 'centerright'
+    else:
+        align = 'center'
+    return align
+
+def set_align(align, rect, x, y):
+    if align in ['topleft', 'topright', 'bottomleft', 'bottomright', 'center']:
+        setattr(rect, align, (x, y))
+    elif align in ['top', 'bottom']:
+        setattr(rect, align, y)
+    elif align in ['left', 'right']:
+        setattr(rect, align, x)
+    elif align in 'centerleft':
+        setattr(rect, 'center', (x, y))
+        setattr(rect, 'left', x)
+    elif align in 'centerright':
+        setattr(rect, 'center', (x, y))
+        setattr(rect, 'right', x)
 
 class BaseObject():
     """
@@ -78,7 +119,6 @@ class LumixGame():
         self.eventManager = EventManager()
         self.textManager = TextManager(self)
         self.imageManager = ImageManager(self)
-        # self.crashManager = CrashManager(self)
         self.dt = 0
         
         self.fps = self.displayManager.get_refresh_rate()
@@ -144,8 +184,7 @@ class LumixGame():
         
         while self.is_running:
             current_scene = self.sceneManager.current_scene
-
-            # self.screen.fill(self.fill_color)
+            self.screen.fill(self.fill_color)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

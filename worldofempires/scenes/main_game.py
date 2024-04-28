@@ -1,5 +1,5 @@
 from engine.managers.sceneManager import Scene
-from engine.managers.textManager import TextManager
+from engine.managers.cameraManager import CameraManager
 
 from ..custom_managers.notificationManager import NotificationManager, Notification
 from ..custom_managers.terrainGenerator import TerrainGenerator, Terrain, layers, pilImageToSurface
@@ -41,9 +41,14 @@ class GameScene(Scene):
         self.alliances: list = []
         self.events: list = []
         
-        self.textManager = self.game.textManager
         self.notificationManager = NotificationManager()
         self.terrainGenerator = TerrainGenerator(game, self)
+        self.cameraManager = CameraManager(game=self.game,
+                                           scene=self,
+                                           x=0, y=0,
+                                           width=self.game.width,
+                                           height=self.game.height,
+                                           align='tl')
         
         self.chosen_countries = []
         self.already_pressed = False
@@ -53,6 +58,14 @@ class GameScene(Scene):
         
         self.sidebar = Sidebar(self.game, self)
         self.settings = {}
+        
+        self.scroll_x = 0
+        self.scroll_y = 0
+        
+        self.current_mouse_pos = pygame.mouse.get_pos()
+        self.previous_mouse_pos = self.current_mouse_pos
+        self.is_scrolling = False
+        self.scroll_rel = None
     
     def fill_sidebar(self):
         button = Button(game=self.game,
@@ -322,8 +335,20 @@ class GameScene(Scene):
         lacunarity = 25
         octaves = 6
         
+        width = self.game.width
+        height = self.game.height
+        
+        if 'map' in self.settings:
+            if 'width' in self.settings['map']:
+                width = self.settings.get('map').get('width')
+            
+            if 'height' in self.settings['map']:
+                height = self.settings.get('map').get('height')
+            
+        shape = (height, width)
+        
         noise_array = self.terrainGenerator.generate(scale=scale,
-                                                      shape=(self.game.height, self.game.width),
+                                                      shape=shape,
                                                       octaves=octaves,
                                                       persistence=persistence,
                                                       lacunarity=lacunarity,
@@ -333,7 +358,7 @@ class GameScene(Scene):
         image = self.terrainGenerator.color_array_to_image(color_array)
         landscape = pilImageToSurface(image)
         
-        terrain = Terrain(game=self.game, scene=self, x=0, y=0, image=image, landscape=landscape, width=self.game.width, height=self.game.height)
+        terrain = Terrain(game=self.game, scene=self, x=0, y=0, image=image, landscape=landscape, width=width, height=height)
         return terrain
     
     def start(self):
@@ -383,8 +408,8 @@ class GameScene(Scene):
         spawn_successful = False
         
         while not spawn_successful:
-            x = random.randint(20, self.game.width - 20)
-            y = random.randint(20, self.game.height - 20)
+            x = random.randint(20, self.terrain.width - 20)
+            y = random.randint(20, self.terrain.height - 20)
             terrain_color = self.terrain.get_at((x, y))
             
             if terrain_color != (22, 156, 233) and terrain_color != (45, 166, 235) and terrain_color != (68, 176, 238) and terrain_color != (58, 29, 19) and terrain_color != (92, 61, 61) and terrain_color != (245, 240, 240):
@@ -510,7 +535,9 @@ class GameScene(Scene):
                     self.chosen_countries = []
                     self.sidebar.get_object(5).onclick()
     
-    def handle_event(self, event):                           
+    def handle_event(self, event):
+        self.current_mouse_pos = pygame.mouse.get_pos()
+                             
         if event.type == pygame.TEXTINPUT:
             match event.text:
                 case '1':
@@ -542,6 +569,14 @@ class GameScene(Scene):
                     print(f'Cities:')
                     for city in self.cities:
                         print(f'- {city}\n')
+                    
+                case '9':
+                    print(self.scroll_x, self.scroll_y)
+                    print(self.terrain.rect.x + self.scroll_x, self.terrain.rect.y + self.scroll_y)
+                    print(self.terrain.rect.x, self.terrain.rect.y)
+                    print(self.terrain.width, self.terrain.height)
+                    print(self.terrain.width - self.game.width)
+                    print(self.terrain.height - self.game.height)
 
                 case '0':
                     self.create_country()
@@ -584,15 +619,26 @@ class GameScene(Scene):
                     for country in self.countries:
                         print(f'- {country.name}: {country.get_people_in_war()}')
         
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            self.is_scrolling = True
+            
+        elif event.type == pygame.MOUSEBUTTONUP:
+            self.is_scrolling = False
+ 
+        # Make your image move continuously
+        elif event.type == pygame.MOUSEMOTION and self.is_scrolling:
+            self.scroll_x += event.rel[0]
+            self.scroll_y += event.rel[1]
+            self.scroll_rel = event.rel
+        
         elif pygame.mouse.get_pressed(num_buttons=3)[0]:
-            mouse_pos = pygame.mouse.get_pos()
             is_colliding = False
             
             for country in self.countries:   
                 if not is_colliding:
                     for territory in country.territory:
-                        if (territory.rect.colliderect(self.sidebar.rect) and not self.sidebar.is_visible) or not territory.rect.colliderect(self.sidebar.rect):
-                            if territory.rect.collidepoint(mouse_pos):
+                        if (territory.camerarect.colliderect(self.sidebar.rect) and not self.sidebar.is_visible) or not territory.camerarect.colliderect(self.sidebar.rect):
+                            if territory.camerarect.collidepoint(self.current_mouse_pos):
                                 if not self.already_pressed:
                                     self.select_country(country)
                                     self.already_pressed = True
@@ -600,8 +646,8 @@ class GameScene(Scene):
                 
                 if not is_colliding:
                     for human in country.humans:
-                        if (human.rect.colliderect(self.sidebar.rect) and not self.sidebar.is_visible) or not human.rect.colliderect(self.sidebar.rect):
-                            if human.rect.collidepoint(mouse_pos):
+                        if (human.camerarect.colliderect(self.sidebar.rect) and not self.sidebar.is_visible) or not human.camerarect.colliderect(self.sidebar.rect):
+                            if human.camerarect.collidepoint(self.current_mouse_pos):
                                 if not self.already_pressed:
                                     self.select_country(country)
                                     self.already_pressed = True
@@ -609,8 +655,8 @@ class GameScene(Scene):
                 
                 if not is_colliding:
                     for city in country.cities + [country.capital]:
-                        if (city.rect.colliderect(self.sidebar.rect) and not self.sidebar.is_visible) or not city.rect.colliderect(self.sidebar.rect):
-                            if city.rect.collidepoint(mouse_pos):
+                        if (city.camerarect.colliderect(self.sidebar.rect) and not self.sidebar.is_visible) or not city.camerarect.colliderect(self.sidebar.rect):
+                            if city.camerarect.collidepoint(self.current_mouse_pos):
                                 if not self.already_pressed:
                                     self.select_country(country)
                                     self.already_pressed = True
@@ -618,35 +664,45 @@ class GameScene(Scene):
 
         elif not pygame.mouse.get_pressed(num_buttons=3)[0]:
             self.already_pressed = False
+            
+        if -self.scroll_x > self.terrain.width - self.game.width:
+            self.scroll_x = -(self.terrain.width - self.game.width)
+        
+        if -self.scroll_y > self.terrain.height - self.game.height:
+            self.scroll_y = -(self.terrain.height - self.game.height)
+        
+        if self.scroll_x > 0:
+            self.scroll_x = 0
+        
+        if self.scroll_y > 0:
+            self.scroll_y = 0
+        
+        self.previous_mouse_pos = pygame.mouse.get_pos()
     
     def render(self):
-        # self.draw_grid(self.land_cell_size, (193, 193, 193))
+        self.screen.fill((22, 156, 233))
         if self.terrain != None:
-            self.terrain.render()
+            self.terrain.render(self.scroll_x, self.scroll_y)
         
         for country in self.countries:
-            list(map(lambda land: land.render(), country.territory))
-            list(map(lambda border: border.render(), country.borders))
-
-        # for alliance in self.alliances:
-        #     alliance.render()
+            list(map(lambda land: land.render(self.scroll_x, self.scroll_y), country.territory))
         
         for country in self.countries:
             country.render()
 
         for country in self.countries:
-            country.king.render()
-            list(map(lambda human: human.render(), country.humans))
+            country.king.render(self.scroll_x, self.scroll_y)
+            list(map(lambda human: human.render(self.scroll_x, self.scroll_y), country.humans))
         
         for country in self.countries:
-            country.capital.render()
+            country.capital.render(self.scroll_x, self.scroll_y)
         
         for country in self.countries:
-            list(map(lambda city: city.render(), country.cities))
+            list(map(lambda city: city.render(self.scroll_x, self.scroll_y), country.cities))
         
         for war in self.wars:
             for battle in war.battles:
-                battle.render()
+                battle.render(self.scroll_x, self.scroll_y)
         
         self.notificationManager.render_notifications()
         

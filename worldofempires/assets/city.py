@@ -29,14 +29,19 @@ class City(engine.BaseObject):
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()
         self.rect.x, self.rect.y = x,y
+        self.camerarect = self.surface.get_rect()
+        self.camerarect.x, self.camerarect.y = x,y
     
     def set_screen(self, screen):
         super().set_screen(screen)
     
-    def render(self):
+    def render(self, add_x=0, add_y=0):
         super().render()
-        pygame.draw.rect(self.screen, self.color, (self.rect.x, self.rect.y, self.size, self.size))
-        self.textManager.render(self.screen, self.rect.x, self.rect.y - 15, self.name, 'arialblack', self.text_color, 10, align='center')
+        # pygame.draw.rect(self.screen, self.color, (self.rect.x, self.rect.y, self.size, self.size))
+        self.screen.blit(self.surface, (self.rect.x + add_x, self.rect.y + add_y))
+        self.camerarect.x = self.rect.x + add_x
+        self.camerarect.y = self.rect.y + add_y
+        self.textManager.render(self.screen, self.rect.x + add_x, self.rect.y + add_y + 15, self.name, 'arialblack', self.text_color, 10, align='center')
     
     def act(self):
         if self.game.settingsManager.settings.get('auto_spawn').get('humans').get('enabled'):
@@ -54,7 +59,8 @@ class City(engine.BaseObject):
     
     def spawn_human(self):
         from .human import Human
-        self.country.humans.append(Human(self.game, self.scene, self.x, self.y, self.country, self))
+        human = Human(self.game, self.scene, self.rect.x, self.rect.y, self.country, self)
+        self.country.humans.append(human)
     
     def __repr__(self):
         return f'City of {self.country} at {self.x=} {self.y=}'

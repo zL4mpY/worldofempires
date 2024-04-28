@@ -55,7 +55,7 @@ class Country(engine.BaseObject):
 
         self.watch_radius = 50.0
         
-        self.king = King(game=self.game, scene=self.scene, x=self.capital.x, y=self.capital.y, country=self, homeland=self.capital)
+        self.king = King(game=self.game, scene=self.scene, x=x, y=y, country=self, homeland=self.capital)
         
         self.surface = pygame.Surface((self.size, self.size))
         self.surface.fill(self.color)
