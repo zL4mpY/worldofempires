@@ -3,6 +3,7 @@ import pygame
 class ImageManager:
     def __init__(self, game):
         self.game = game
+        self.game.loggingManager.log(f'ImageManager initialized!', 'INFO')
     
     def get_surface(self, image, x, y, scale, align="topleft"):
         width = image.get_width()

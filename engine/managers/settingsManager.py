@@ -4,9 +4,13 @@ from pathlib import Path
 import json
 
 class SettingsManager:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
+        
         self.settings: dict
         self.file_path = None
+        
+        self.game.loggingManager.log(f'SettingsManager initialized!', 'INFO')
     
     def get(self, key):
         return self.settings[key]
@@ -45,4 +49,4 @@ class SettingsManager:
     
     def save_settings(self):
         with open(self.file_path, 'w') as f:
-            json.dump(self.settings, f)
+            json.dump(self.settings, f, indent=4)

@@ -1,13 +1,19 @@
+from .uiManager import UIManager
+
 import os
 import pygame
 
 class SceneManager:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.scenes: dict = {}
         self.current_state = None
+        
+        self.game.loggingManager.log(f'SceneManager initialized!', 'INFO')
 
     def add_scene(self, scene_name: str, scene):
         self.scenes[scene_name] = scene
+        self.game.loggingManager.log(f'Added scene {scene_name} to SceneManager!', 'INFO')
 
     def switch_scene(self, new_scene_name: str):
         if new_scene_name in self.scenes:
@@ -49,6 +55,7 @@ class Scene:
     def __init__(self, game, name):
         self.game = game
         self.screen = self.game.screen
+        self.name = name
         
         self.settingsManager = self.game.settingsManager
         self.displayManager = self.game.displayManager
@@ -57,9 +64,8 @@ class Scene:
         self.eventManager = self.game.eventManager
         self.textManager = self.game.textManager
         self.imageManager = self.game.imageManager
+        self.uiManager = UIManager(game=self.game, scene=self)
         self.dt = self.game.dt
-        
-        self.name = name
         
         self.start_time = pygame.time.get_ticks()
         
@@ -67,12 +73,14 @@ class Scene:
             Set your variables here
         '''
         
-        pass
+        self.game.loggingManager.log(f'Scene \'{self.name}\' initialized!', 'INFO')
 
     def start(self):
         '''
             Starts the scene and initializes start events.
         '''
+        
+        self.game.loggingManager.log(f'Scene \'{self.name}\' has started!', 'INFO')
         
         pass
     

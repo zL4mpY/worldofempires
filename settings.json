@@ -1,1 +1,46 @@
-{"language": "ru_RU", "resolution": "1280x720", "fullscreen": false, "max_fps": 15, "game_font": "arialblack", "countries": {"play_as_country": false, "min_value": 2, "max_value": 8}, "auto_spawn": {"humans": {"enabled": true, "spawn_chance": 25}, "countries": {"enabled": true, "spawn_chance": 5}}, "dev_mode": false}
+{
+    "language": "en_US",
+    "resolution": "1280x720",
+    "fullscreen": false,
+    "max_fps": 15,
+    "game_font": "arialblack",
+    "countries": {
+        "play_as_country": false,
+        "min_value": 2,
+        "max_value": 8
+    },
+    "auto_spawn": {
+        "humans": {
+            "enabled": true,
+            "spawn_chance": 25
+        },
+        "countries": {
+            "enabled": true,
+            "spawn_chance": 5
+        },
+        "terrain": {
+            "enabled": true,
+            "trees": {
+                "enabled": true,
+                "spawn_chance": 95
+            },
+            "stone": {
+                "enabled": true,
+                "spawn_chance": 60
+            },
+            "iron_ore": {
+                "enabled": true,
+                "spawn_chance": 35
+            },
+            "silver_ore": {
+                "enabled": true,
+                "spawn_chance": 25
+            },
+            "gold_ore": {
+                "enabled": true,
+                "spawn_chance": 20
+            }
+        }
+    },
+    "dev_mode": false
+}

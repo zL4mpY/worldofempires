@@ -1,6 +1,7 @@
 import time
 import pygame
 from typing import Callable
+from threading import Thread
 
 keys = {
     '1': pygame.K_1,
@@ -100,12 +101,15 @@ class EventManager():
     
     """
     
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.game_start_time = None
         self.game_end_time = None
         self.scene_start_time = {}
         self._events = []
         self._keyboard_events = []
+        
+        self.game.loggingManager.log(f'EventManager initialized!', 'INFO')
     
     def get_events(self) -> dict:
         return self._events
@@ -128,7 +132,7 @@ class EventManager():
         """
         return self.start_time
         
-    def create_event(self, event: Event | str) -> None:
+    def create_event(self, event: Event | Callable, time: int = 0) -> None:
         """
         
             Use it to create an event that will execute after any time you want.
@@ -136,8 +140,13 @@ class EventManager():
             event will be executed (in seconds).
         
         """
+        if isinstance(event, Callable):
+            event = Event(event, time)
         
         self._events.append(event)
+    
+    def start_in_thread(self, func: Callable, args=()):
+        return Thread(target=func, args=args).start()
     
     def remove_event(self, event: Event | str) -> None:
         """

@@ -25,6 +25,9 @@ class City(engine.BaseObject):
         self.human_spawn_boost = 0
         self.regen_size = {'min': round(random.uniform(0.05, 2), 2), 'max': round(random.uniform(2, 10), 2)}
         
+        from ..custom_managers.inventoryManager import Inventory
+        self.inventory = Inventory(self, [])
+        
         self.surface = pygame.Surface((self.size, self.size))
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()

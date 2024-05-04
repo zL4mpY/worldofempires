@@ -3,6 +3,7 @@ import pygame
 class TextManager:
     def __init__(self, game):
         self.game = game
+        self.game.loggingManager.log(f'TextManager initialized!', 'INFO')
         
     def render(self, surface, x, y, text, font, color, size, side='none', align='none'):
         try:

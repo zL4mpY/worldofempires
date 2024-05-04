@@ -1,4 +1,5 @@
 import pygame
+from engine import get_align, set_align, set_align_add
 
 class CheckBox():
     def __init__(self,
@@ -15,14 +16,11 @@ class CheckBox():
                  truetext='on',
                  font='Arial',
                  fontsize=20,
-                 color=(0, 0, 0),
+                 textcolor=(0, 0, 0),
                  multipress=False,
-                 normalcolor='#ffffff',
-                 normaltransparency=255,
-                 hovercolor='#666666',
-                 hovertransparency=255,
-                 pressedcolor='#333333',
-                 pressedtransparency=255
+                 boxcolor='#ffffff',
+                 outlinecolor=(225, 225, 225),
+                 outlinewidth=2
                  ):
         
         self.game = game
@@ -42,137 +40,105 @@ class CheckBox():
         self.truevalue = truevalue
 
         self.is_visible = True
-        self.color = color
+        self.textcolor = textcolor
         self.falsetext = falsetext
         self.truetext = truetext
         self.currenttext = self.truetext if defaultvalue else self.falsetext
         self.align = align
+        self.outlinewidth = outlinewidth
         
         self.fontname = font
+        self.fontsize = fontsize
         
         try:
             self.font = pygame.font.Font(self.fontname, fontsize)
         except Exception:
             self.font = pygame.font.SysFont(self.fontname, fontsize)
-
-        self.fillColors = {
-            'normal': normalcolor,
-            'hover': hovercolor,
-            'pressed': pressedcolor,
-        }
         
-        self.fillTransparencies = {
-            'normal': normaltransparency,
-            'hover': hovertransparency,
-            'pressed': pressedtransparency,
-        }
+        self.boxcolor = boxcolor
+        self.outlinecolor = outlinecolor
          
-        self.buttonSurface = pygame.Surface((self.width, self.height))
-        self.buttonRect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.surface = pygame.Surface((self.width, self.height))
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.surface.fill(self.boxcolor)
         
-        self.devButtonSurface = pygame.Surface((self.width, self.height))
-        self.devButtonSurface.set_alpha(64)
-        self.devButtonSurface.fill((0, 0, 255))
+        self.bgSurface = pygame.Surface((self.width+(self.outlinewidth*2), self.height+(self.outlinewidth*2)))
+        self.bgRect = pygame.Rect(x-(self.outlinewidth*2), y-(self.outlinewidth*2), self.width-(self.outlinewidth*2), self.height-(self.outlinewidth*2))
+        self.bgSurface.fill(self.outlinecolor)
         
-        self.devButtonRect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.devSurface = pygame.Surface((self.width+(self.outlinewidth*2), self.height+(self.outlinewidth*2)))
+        self.devSurface.set_alpha(64)
+        self.devSurface.fill((0, 0, 255))
         
-        if self.align == "tl":
-            self.align = "topleft"
-            
-        elif self.align == "tr":
-            self.align = "topright"
-            
-        elif self.align == "br":
-            self.align = "bottomright"
-            
-        elif self.align == "bl":
-            self.align = "bottomleft"
-            
-        elif self.align == "l":
-            self.align = "left"
-            
-        elif self.align == "r":
-            self.align = "right"
-            
-        elif self.align == "t":
-            self.align = "top"
-            
-        elif self.align == "b":
-            self.align = "bottom"
-            
-        elif self.align == "c":
-            self.align = "center"
+        self.devRect = pygame.Rect(self.x, self.y, self.width+self.outlinewidth*2, self.height+self.outlinewidth*2)
         
-        if self.align in ['left', 'right']:
-            setattr(self.buttonRect, self.align, x)
-            setattr(self.devButtonRect, self.align, x)
-            
-        elif self.align in ['top, bottom']:
-            setattr(self.buttonRect, self.align, y)
-            setattr(self.devButtonRect, self.align, y)
-            
-        elif self.align in ['center', 'topleft', 'topright', 'bottomleft', 'bottomright']:
-            setattr(self.buttonRect, self.align, (x, y))
-            setattr(self.devButtonRect, self.align, (x, y))
+        self.align = get_align(self.align)
+        
+        self.rect.x, self.rect.y = set_align(self.align, self.rect, self.x, self.y)
+        self.bgRect.x, self.bgRect.y = set_align_add(self.align, self.bgRect, self.outlinewidth, self.outlinewidth, self.x, self.y)
+        self.devRect.x, self.devRect.y = set_align_add(self.align, self.devRect, self.outlinewidth, self.outlinewidth, self.x, self.y)
                 
-        self.buttonSurface.set_alpha(self.fillTransparencies['normal'])
-        self.buttonSurf = self.font.render(self.currenttext, True, self.color)
-        self.devButtonSurf = self.font.render(self.currenttext, True, self.color)
+        self.surf = self.font.render(self.currenttext, True, self.textcolor)
+        self.devSurf = self.font.render(self.currenttext, True, self.textcolor)
     
     def get_value(self):
         return self.value
     
-    def change_state(self, state):
-        if state == 'normal':
-            self.buttonSurface.fill(self.fillColors['normal'])
-            self.buttonSurface.set_alpha(self.fillTransparencies['normal'])
-    
-        elif state == 'hover':
-            self.buttonSurface.fill(self.fillColors['hover'])
-            self.buttonSurface.set_alpha(self.fillTransparencies['hover'])
+    def update(self):
+        # mousePos = pygame.mouse.get_pos()
         
-        elif state == 'pressed':
-            self.buttonSurface.fill(self.fillColors['pressed'])
-            self.buttonSurface.set_alpha(self.fillTransparencies['pressed'])
-    
-    def handle_event(self):
+        # if self.devRect.collidepoint(mousePos):
+            
+        #     if pygame.mouse.get_pressed(num_buttons=3)[0]:
+        #         if self.multipress:
+        #             self.value = self.falsevalue if self.value == self.truevalue else self.truevalue
+        #             self.currenttext = self.falsetext if self.value != self.truevalue else self.truetext
+        #             self.surf = self.font.render(self.currenttext, True, self.textcolor)
+        #             self.devSurf = self.font.render(self.currenttext, True, self.textcolor)
+                
+        #         elif not self.alreadyPressed:
+        #             self.value = self.falsevalue if self.value == self.truevalue else self.truevalue
+        #             self.currenttext = self.falsetext if self.value != self.truevalue else self.truetext
+        #             self.surf = self.font.render(self.currenttext, True, self.textcolor)
+        #             self.devSurf = self.font.render(self.currenttext, True, self.textcolor)
+        #             self.alreadyPressed = True
+        #     else:
+        #         self.alreadyPressed = False
         mousePos = pygame.mouse.get_pos()
         
-        self.change_state('normal')
-        
-        if self.devButtonRect.collidepoint(mousePos):
-            self.change_state('hover')
+        if self.devRect.collidepoint(mousePos):
             
             if pygame.mouse.get_pressed(num_buttons=3)[0]:
                 if self.multipress:
-                    self.change_state('pressed')
                     self.value = self.falsevalue if self.value == self.truevalue else self.truevalue
                     self.currenttext = self.falsetext if self.value != self.truevalue else self.truetext
-                    self.buttonSurf = self.font.render(self.currenttext, True, self.color)
-                    self.devButtonSurf = self.font.render(self.currenttext, True, self.color)
+                    self.surf = self.font.render(self.currenttext, True, self.textcolor)
                 
                 elif not self.alreadyPressed:
-                    self.change_state('pressed')
                     self.value = self.falsevalue if self.value == self.truevalue else self.truevalue
                     self.currenttext = self.falsetext if self.value != self.truevalue else self.truetext
-                    self.buttonSurf = self.font.render(self.currenttext, True, self.color)
-                    self.devButtonSurf = self.font.render(self.currenttext, True, self.color)
+                    self.surf = self.font.render(self.currenttext, True, self.textcolor)
+                    
                     self.alreadyPressed = True
             else:
                 self.alreadyPressed = False
-                
+    
+    def handle_event(self, event):
+        pass
     
     def render(self):
         if self.is_visible:
-            self.buttonSurface.blit(self.buttonSurf, [
-                self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
-                self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
+            
+            
+            self.bgSurface.fill(self.outlinecolor)
+            self.screen.blit(self.bgSurface, self.bgRect)
+            
+            self.surface.fill(self.boxcolor)
+            self.surface.blit(self.surf, [
+                (self.rect.width - self.surf.get_rect().width ) /2,
+                (self.rect.height - self.surf.get_rect().height) /2
             ])
-            self.screen.blit(self.buttonSurface, self.buttonRect)
+            self.screen.blit(self.surface, self.rect)
                 
         if self.game.is_devmode:
-            self.devButtonSurface.blit(self.devButtonSurf, [
-                    self.devButtonRect.width/2 - self.devButtonSurf.get_rect().width/2,
-                    self.devButtonRect.height/2 - self.devButtonSurf.get_rect().height/2
-                ])
-            self.screen.blit(self.devButtonSurface, self.devButtonRect)
+            self.screen.blit(self.devSurface, self.devRect)

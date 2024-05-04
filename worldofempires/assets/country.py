@@ -40,6 +40,9 @@ class Country(engine.BaseObject):
         self.territory = []
         self.borders = []
         self.cities = []
+        
+        from ..custom_managers.inventoryManager import Inventory
+        self.inventory = Inventory(self, [])
 
         self.humans = []
         self.hp = 500
@@ -78,7 +81,7 @@ class Country(engine.BaseObject):
                     if len(self.humans) + len([self.king]) > 1 and len(country.humans) + len([country.king]) > 1:
                         self.declare_war(country)
         
-        actions, chances = ["nothing", "create_city", "declare_war", "create_alliance", "create_friendship"], [90, round(5 / self.game.fps, 3), round(5 / self.game.fps, 3), round(5 / self.game.fps, 3), round(5 / self.game.fps, 3)]
+        actions, chances = ["nothing", "create_city", "declare_war", "create_alliance", "create_friendship"], [90 * self.game.game_speed, round(5 / self.game.fps * self.game.game_speed, 3), round(5 / self.game.fps * self.game.game_speed, 3), round(5 / self.game.fps * self.game.game_speed, 3), round(5 / self.game.fps * self.game.game_speed, 3)]
         action = random.choices(actions, chances, k=1)[0]
 
         match action:
@@ -86,31 +89,32 @@ class Country(engine.BaseObject):
                 pass
 
             case "create_city":
-                all_distances_above_80 = all([distance(self.king.rect, city) >= 80 for city in self.scene.cities])
-                
-                if all_distances_above_80:
-                    city = City(self.game, self.scene, self.king.rect.x, self.king.rect.y, self, False)
-                    message = self.game.lang['onCityFound']
-
-                    self.scene.notificationManager.add_notification(Notification(self.game, self.scene, message.format(self.name)))
-                    self.scene.events.append(Log(message.format(self.name)))
-                    self.cities.append(city)
-                    self.scene.cities.append(city)
+                if not self.king.states['is_mining_resources'] and not self.king.states['return_to_homeland']:
+                    all_distances_above_80 = all([distance(self.king.rect, city) >= 80 for city in self.scene.cities])
+                    
+                    if all_distances_above_80:
+                        city = City(self.game, self.scene, self.king.rect.x, self.king.rect.y, self, False)
+                        message = self.game.lang['onCityFound']
+    
+                        self.scene.notificationManager.add_notification(Notification(self.game, self.scene, message.format(self.name)))
+                        self.scene.events.append(Log(message.format(self.name)))
+                        self.cities.append(city)
+                        self.scene.cities.append(city)
             
             case "declare_war":
-                if random.random() < 1 / 25:
+                if random.random() < 1 / 25 * self.game.game_speed:
                     for country, agression in list(self.agression.items()):
                         if self.agression[country] >= 60:
-                            if random.random() < 25 / 100:
+                            if random.random() < 25 / 100 * self.game.game_speed:
                                 if len(self.humans) + len([self.king]) > 1 and not self.in_war_with(country):
                                     self.declare_war(country)
                         else:
-                            if random.random() < 1 / 100:
+                            if random.random() < 1 / 100 * self.game.game_speed:
                                 if len(self.humans) + len([self.king]) > 1 and not self.in_war_with(country):
                                     self.declare_war(country) 
             
             case "create_alliance":
-                if random.random() < 1 / 100:
+                if random.random() < 1 / 100 * self.game.game_speed:
                     ally = None
 
                     for country in self.scene.countries:
@@ -137,7 +141,7 @@ class Country(engine.BaseObject):
                         self.create_alliance(ally)
             
             case "create_friendship":
-                if random.random() < 1 / 75:
+                if random.random() < 1 / 75 * self.game.game_speed:
                     friend = None
                     
                     for country in self.scene.countries:
@@ -300,14 +304,14 @@ class Country(engine.BaseObject):
 
         # Check if any allies will join the war
         for ally in self.allies:
-            if ally not in war.participants and ally not in enemy.allies and random.random() < 0.75:
+            if ally not in war.participants and ally not in enemy.allies and random.random() < 0.75 * self.game.game_speed:
                 ally.states['in_war'] = True
                 war.add_participant(participant=ally)
                 ally.wars.append(war)
                 ally.change_population_state(states=['current_war', 'current_battle'], values=[war, battle], percentage_of_people=20)
 
         for ally in enemy.allies:
-            if ally not in war.participants and ally not in self.allies and random.random() < 0.75:
+            if ally not in war.participants and ally not in self.allies and random.random() < 0.75 * self.game.game_speed:
                 ally.states['in_war'] = True
                 war.add_participant(participant=ally)
                 ally.wars.append(war)
@@ -439,8 +443,11 @@ class Country(engine.BaseObject):
             city.country = destroyer
             city.color = destroyer.color
 
-            self.cities.remove(city)
-            destroyer.cities.append(city)
+            if city in self.cities:
+                self.cities.remove(city)
+                
+            if not city in destroyer.cities:
+                destroyer.cities.append(city)
 
             for land in closest_territories:
                 land.country = destroyer

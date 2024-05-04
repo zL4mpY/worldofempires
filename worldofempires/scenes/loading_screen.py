@@ -24,7 +24,7 @@ class LoadingScene(Scene):
         label = Label(game=self.game,
                       scene=self,
                       x=self.game.width - 6, y=self.game.height - 6,
-                      text="Loading...",
+                      text=f"{self.game.lang.get('loading_label')}",
                       font="Arial",
                       fontsize=20,
                       color=(255, 255, 255),

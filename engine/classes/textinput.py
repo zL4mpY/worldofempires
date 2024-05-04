@@ -1,4 +1,5 @@
 import pygame
+from engine import get_align, set_align, set_align_add
 
 class TextInputBox():
     def __init__(self,
@@ -14,6 +15,7 @@ class TextInputBox():
                  boxcolor=(225, 225, 225),
                  activecolor=(255, 255, 255),
                  outlinecolor=(190, 190, 190),
+                 outlinewidth=2,
                  activeoutlinecolor=(220, 220, 220),
                  align='tl',
                  allowedchars='all'):
@@ -22,56 +24,47 @@ class TextInputBox():
         self.scene = scene
         self.screen = self.scene.screen
         self.align = align
+        self.outlinewidth = outlinewidth
         
         self.width, self.height = width, height
         
         if self.height < fontsize + 2:
             self.height = fontsize + 2
             
-        self.bgsurface = pygame.Surface((width-4, height-4))
-        self.bgrect = pygame.Rect(x-4, y-4, self.width-4, self.height-4)
+        self.bgsurface = pygame.Surface((width-(outlinewidth*2), height-(outlinewidth*2)))
+        self.bgrect = pygame.Rect(x-(outlinewidth*2), y-(outlinewidth*2), self.width-(outlinewidth*2), self.height-(outlinewidth*2))
             
         self.surface = pygame.Surface((width, height))
         self.rect = pygame.Rect(x, y, self.width, self.height)
             
-        if self.align == "tl":
-            self.align = "topleft"
-            
-        elif self.align == "tr":
-            self.align = "topright"
-            
-        elif self.align == "br":
-            self.align = "bottomright"
-            
-        elif self.align == "bl":
-            self.align = "bottomleft"
-            
-        elif self.align == "l":
-            self.align = "left"
-            
-        elif self.align == "r":
-            self.align = "right"
-            
-        elif self.align == "t":
-            self.align = "top"
-            
-        elif self.align == "b":
-            self.align = "bottom"
-            
-        elif self.align == "c":
-            self.align = "center"
+        self.align = get_align(self.align)
+        self.rect.x, self.rect.y = set_align(self.align, self.rect, x, y)
+        self.bgrect.x, self.bgrect.y = set_align_add(self.align, self.bgrect, self.outlinewidth, self.outlinewidth, x, y)
         
-        if self.align in ['left', 'right']:
-            setattr(self.rect, self.align, x)
-            setattr(self.bgrect, self.align, x-4)
+        # if self.align in ['left', 'right']:
+        #     setattr(self.rect, self.align, x)
+        #     setattr(self.bgrect, self.align, x-outlinewidth)
+        #     setattr(self.bgrect, "top", y-2)
             
-        elif self.align in ['top, bottom']:
-            setattr(self.rect, self.align, y)
-            setattr(self.bgrect, self.align, y-4)
+        # elif self.align in ['top, bottom']:
+        #     setattr(self.rect, self.align, y)
+        #     setattr(self.bgrect, self.align, y-outlinewidth*2)
             
-        elif self.align in ['center', 'topleft', 'topright', 'bottomleft', 'bottomright']:
-            setattr(self.rect, self.align, (x, y))
-            setattr(self.bgrect, self.align, (x-4, y-4))
+        # elif self.align in ['center', 'topleft', 'topright', 'bottomleft', 'bottomright']:
+        #     setattr(self.rect, self.align, (x, y))
+        #     setattr(self.bgrect, self.align, (x-outlinewidth*2, y-outlinewidth*2))
+        
+        # elif self.align == 'centerleft':
+        #     setattr(self.rect, "center", (x, y))
+        #     setattr(self.rect, "left", x)
+        #     setattr(self.bgrect, "center", (x-outlinewidth, y-outlinewidth))
+        #     setattr(self.bgrect, "left", x-2)
+        
+        # elif self.align == 'centerright':
+        #     setattr(self.rect, "center", (x, y))
+        #     setattr(self.rect, "right", x)
+        #     setattr(self.bgrect, "center", (x-outlinewidth, y-outlinewidth))
+        #     setattr(self.bgrect, "right", x-outlinewidth)
 
         self.color = boxcolor
         self.activecolor = activecolor
@@ -139,8 +132,8 @@ class TextInputBox():
         self.rect.w = text_surface.get_width()+10
         self.surface = pygame.Surface((self.rect.w, self.height))
         
-        self.bgrect.w = text_surface.get_width()+14
-        self.bgsurface = pygame.Surface((self.bgrect.w, self.height+4))
+        self.bgrect.w = text_surface.get_width()+10 + self.outlinewidth * 2
+        self.bgsurface = pygame.Surface((self.bgrect.w, self.height+(self.outlinewidth*2)))
         
         self.bgsurface.fill(self.currentoutlinecolor)
         self.surface.fill(self.currentcolor)

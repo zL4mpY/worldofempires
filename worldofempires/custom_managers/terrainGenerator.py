@@ -22,13 +22,14 @@ def pilImageToSurface(pilImage):
         pilImage.tobytes(), pilImage.size, pilImage.mode).convert()
 
 class Terrain():
-    def __init__(self, game, scene, x, y, image, landscape, width, height):
+    def __init__(self, game, scene, x, y, image, landscape, width, height, zoom=100):
         self.game = game
         self.scene = scene
         self.screen = self.game.screen
         
         self.image = image
         self.landscape = landscape
+        self.zoom = zoom
         self.rect = self.screen.get_rect()
         self.rect.topleft = (x, y)
         self.width, self.height = width, height

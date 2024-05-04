@@ -1,4 +1,5 @@
 import pygame
+from engine import get_align, set_align, set_align_add
 
 class Button():
     def __init__(self,
@@ -75,69 +76,73 @@ class Button():
             'pressed': pressedimage,
         }
          
-        self.buttonSurface = pygame.Surface((self.width, self.height))
-        self.buttonRect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.surface = pygame.Surface((self.width, self.height))
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         
-        self.devButtonSurface = pygame.Surface((self.width, self.height))
-        self.devButtonSurface.set_alpha(64)
-        self.devButtonSurface.fill((0, 0, 255))
+        self.devSurface = pygame.Surface((self.width, self.height))
+        self.devSurface.set_alpha(64)
+        self.devSurface.fill((0, 0, 255))
         
-        self.devButtonRect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.devRect = pygame.Rect(self.x, self.y, self.width, self.height)
         
-        if self.align == "tl":
-            self.align = "topleft"
-            
-        elif self.align == "tr":
-            self.align = "topright"
-            
-        elif self.align == "br":
-            self.align = "bottomright"
-            
-        elif self.align == "bl":
-            self.align = "bottomleft"
-            
-        elif self.align == "l":
-            self.align = "left"
-            
-        elif self.align == "r":
-            self.align = "right"
-            
-        elif self.align == "t":
-            self.align = "top"
-            
-        elif self.align == "b":
-            self.align = "bottom"
-            
-        elif self.align == "c":
-            self.align = "center"
+        self.align = get_align(self.align)
+        set_align(self.align, self.rect, self.x, self.y)
+        set_align(self.align, self.devRect, self.x, self.y)
         
-        if self.align in ['left', 'right']:
-            setattr(self.buttonRect, self.align, x)
-            setattr(self.devButtonRect, self.align, x)
+        # if self.align == "tl":
+        #     self.align = "topleft"
             
-        elif self.align in ['top, bottom']:
-            setattr(self.buttonRect, self.align, y)
-            setattr(self.devButtonRect, self.align, y)
+        # elif self.align == "tr":
+        #     self.align = "topright"
             
-        elif self.align in ['center', 'topleft', 'topright', 'bottomleft', 'bottomright']:
-            setattr(self.buttonRect, self.align, (x, y))
-            setattr(self.devButtonRect, self.align, (x, y))
+        # elif self.align == "br":
+        #     self.align = "bottomright"
+            
+        # elif self.align == "bl":
+        #     self.align = "bottomleft"
+            
+        # elif self.align == "l":
+        #     self.align = "left"
+            
+        # elif self.align == "r":
+        #     self.align = "right"
+            
+        # elif self.align == "t":
+        #     self.align = "top"
+            
+        # elif self.align == "b":
+        #     self.align = "bottom"
+            
+        # elif self.align == "c":
+        #     self.align = "center"
+        
+        # if self.align in ['left', 'right']:
+        #     setattr(self.rect, self.align, x)
+        #     setattr(self.devRect, self.align, x)
+            
+        # elif self.align in ['top, bottom']:
+        #     setattr(self.rect, self.align, y)
+        #     setattr(self.devRect, self.align, y)
+            
+        # elif self.align in ['center', 'topleft', 'topright', 'bottomleft', 'bottomright']:
+        #     setattr(self.rect, self.align, (x, y))
+        #     setattr(self.devRect, self.align, (x, y))
                 
-        self.buttonSurface.set_alpha(self.fillTransparencies['normal'])
+        self.surface.set_alpha(self.fillTransparencies['normal'])
 
         if self.image == None:
-            self.buttonSurf = self.font.render(self.text, True, self.color)
-            self.devButtonSurf = self.font.render(self.text, True, self.color)
+            self.surf = self.font.render(self.text, True, self.color)
+            self.devSurf = self.font.render(self.text, True, self.color)
             
         else:
-            self.devButtonSurf = pygame.Surface(self.scene.imageManager.get_surface(self.image_to_render, self.x, self.y, self.scale, self.align))
+            self.devSurf = pygame.Surface(self.scene.imageManager.get_surface(self.image_to_render, self.x, self.y, self.scale, self.align))
     
     def change_text(self, text):
         self.text = text
         
         if self.image == None:
-            self.buttonSurf = self.font.render(self.text, True, self.color)
-            self.devButtonSurf = self.font.render(self.text, True, self.color)
+            self.surf = self.font.render(self.text, True, self.color)
+            self.devSurf = self.font.render(self.text, True, self.color)
     
     def change_font(self, font, fontsize):
         self.fontsize = fontsize if fontsize != None else self.fontsize
@@ -148,22 +153,22 @@ class Button():
             self.font = pygame.font.SysFont(font, fontsize) if font != None else pygame.font.SysFont(self.fontname, fontsize)
 
         if self.image == None:
-            self.buttonSurf = self.font.render(self.text, True, self.color)
-            self.devButtonSurf = self.font.render(self.text, True, self.color)
+            self.surf = self.font.render(self.text, True, self.color)
+            self.devSurf = self.font.render(self.text, True, self.color)
     
     def change_state(self, state):
         if self.image == None:
             if state == 'normal':
-                self.buttonSurface.fill(self.fillColors['normal'])
-                self.buttonSurface.set_alpha(self.fillTransparencies['normal'])
+                self.surface.fill(self.fillColors['normal'])
+                self.surface.set_alpha(self.fillTransparencies['normal'])
         
             elif state == 'hover':
-                self.buttonSurface.fill(self.fillColors['hover'])
-                self.buttonSurface.set_alpha(self.fillTransparencies['hover'])
+                self.surface.fill(self.fillColors['hover'])
+                self.surface.set_alpha(self.fillTransparencies['hover'])
             
             elif state == 'pressed':
-                self.buttonSurface.fill(self.fillColors['pressed'])
-                self.buttonSurface.set_alpha(self.fillTransparencies['pressed'])
+                self.surface.fill(self.fillColors['pressed'])
+                self.surface.set_alpha(self.fillTransparencies['pressed'])
         
         else:
             if state == 'normal':
@@ -174,54 +179,13 @@ class Button():
             
             elif state == 'pressed':
                 self.image_to_render = self.fillImages['pressed']
-                
-    # def onhover(self):
-    #     self.change_state('hover')
-        
-    #     if self.onhoverFunction:
-    #         self.onhoverFunction()
     
-    # def onclick(self):
-    #     # mousePos = pygame.mouse.get_pos()
-        
-    #     # # if not self.image:
-    #     # #     self.buttonSurface.fill(self.fillColors['normal'])
-
-    #     # if self.buttonRect.collidepoint(mousePos):
-    #     #     self.onhover()
-            
-    #     #     if pygame.mouse.get_pressed(num_buttons=3)[0]:
-    #     #         if not self.image:
-    #     #             self.buttonSurface.fill(self.fillColors['pressed'])
-                
-    #     #         if not self.multiPress:
-    #     #             self.onclickFunction()
-                
-    #     #         elif not self.alreadyPressed:
-    #     #             self.onclickFunction()
-    #     #             self.alreadyPressed = True
-    #     #     else:
-    #     #         self.alreadyPressed = False
-        
-    #     if self.image == None:
-    #         self.change_state('pressed')
-        
-    #     if self.onclickFunction:
-    #         self.onclickFunction()
-    
-    # def onhold(self):
-    #     if self.image == None:
-    #         self.change_state('pressed')
-            
-    #     if self.onholdFunction:
-    #         self.onholdFunction()
-    
-    def handle_event(self):
+    def update(self):
         mousePos = pygame.mouse.get_pos()
         
         self.change_state('normal')
         
-        if self.devButtonRect.collidepoint(mousePos):
+        if self.devRect.collidepoint(mousePos):
             self.change_state('hover')
             
             if self.onhover: self.onhover()
@@ -237,22 +201,24 @@ class Button():
                     self.alreadyPressed = True
             else:
                 self.alreadyPressed = False
-                
+    
+    def handle_event(self, event):
+        pass          
     
     def render(self):
         if self.is_visible:
             if self.image == None:
-                self.buttonSurface.blit(self.buttonSurf, [
-                    self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
-                    self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
+                self.surface.blit(self.surf, [
+                    self.rect.width/2 - self.surf.get_rect().width/2,
+                    self.rect.height/2 - self.surf.get_rect().height/2
                 ])
-                self.screen.blit(self.buttonSurface, self.buttonRect)
+                self.screen.blit(self.surface, self.rect)
             else:
                 self.scene.imageManager.render(self.screen, self.image_to_render, self.x, self.y, self.scale, self.align)
                 
         if self.game.is_devmode:
-            self.devButtonSurface.blit(self.devButtonSurf, [
-                    self.devButtonRect.width/2 - self.devButtonSurf.get_rect().width/2,
-                    self.devButtonRect.height/2 - self.devButtonSurf.get_rect().height/2
+            self.devSurface.blit(self.devSurf, [
+                    self.devRect.width/2 - self.devSurf.get_rect().width/2,
+                    self.devRect.height/2 - self.devSurf.get_rect().height/2
                 ])
-            self.screen.blit(self.devButtonSurface, self.devButtonRect)
+            self.screen.blit(self.devSurface, self.devRect)

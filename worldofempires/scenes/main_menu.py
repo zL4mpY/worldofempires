@@ -4,6 +4,7 @@ from ..custom_managers.terrainGenerator import TerrainGenerator, Terrain, layers
 
 from engine.classes.button import Button
 from engine.classes.label import Label
+from engine.classes.image import Image
 from engine import get_base_dir
 
 import pygame, random
@@ -12,18 +13,19 @@ class MenuScene(Scene):
     def __init__(self, game, name):
         super().__init__(game, name)
         
-        self.objects = []
-        self.buttons = []
-        
-        # self.imageManager = self.game.imageManager
         self.terrainGenerator = TerrainGenerator(self.game, self)
-        self.logo = pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "logo.png", "")
-        self.menu_bg = pygame.image.load(get_base_dir() / "worldofempires" / "assets" / "menu_bg.png", "")
         self.terrain = None
         
         self.draw_objects()
     
     def draw_objects(self):
+        self.uiManager.add_element(element=Image(game=self.game,
+                                         scene=self,
+                                         x=self.game.width / 2, y=0+self.game.height / 5,
+                                         image=get_base_dir() / "worldofempires" / "assets" / "logo.png",
+                                         align='c'),
+                                   id="game_logo")
+        
         def onclick():
             self.sceneManager.get_scene("map_settings_menu").terrain = self.terrain
             self.sceneManager.switch_scene("map_settings_menu")
@@ -35,7 +37,7 @@ class MenuScene(Scene):
                         scene=self,
                         x=self.game.width / 2, y=self.game.height / 2 + 20,
                         width=200, height=50,
-                        text='Play',
+                        text=f'{self.game.lang.get("play")}',
                         scale=1,
                         align="center",
                         font=self.game.settingsManager.settings.get('font'),
@@ -44,8 +46,7 @@ class MenuScene(Scene):
                         multipress=False,
         )
 
-        self.buttons.append(button)
-        self.objects.append(button)
+        self.uiManager.add_element(button, 'play_button')
 
         del onclick
         del button
@@ -59,15 +60,14 @@ class MenuScene(Scene):
                         scene=self,
                         x=self.game.width / 2, y=self.game.height / 2 + 120,
                         width=200, height=50,
-                        text='Settings',
+                        text=f'{self.game.lang.get("settings")}',
                         font=self.game.settingsManager.settings.get('font'),
                         fontsize=25,
                         onclick=onclick,
                         multipress=False,
                         align='center')
 
-        self.buttons.append(button)
-        self.objects.append(button)
+        self.uiManager.add_element(button, 'settings_button')
 
         del onclick
         del button
@@ -85,7 +85,7 @@ class MenuScene(Scene):
                       side="lb",
                       align="left")
 
-        self.objects.append(label)
+        self.uiManager.add_element(label, 'version_label')
         self.terrain = self.generate_terrain()
     
     def generate_terrain(self):
@@ -116,11 +116,10 @@ class MenuScene(Scene):
         pass
     
     def update(self):
-        for button in self.buttons:
-            button.handle_event()
+        self.uiManager.update_ui()
     
     def handle_event(self, event):
-        pass
+        self.uiManager.handle_event(event)
     
     def render(self):
         self.screen.fill((150, 150, 150))
@@ -128,11 +127,7 @@ class MenuScene(Scene):
         if self.terrain:
             self.terrain.render()
         
-        # self.imageManager.render(self.screen, self.menu_bg, 0, 0, 1, align="tl")
-        self.imageManager.render(self.screen, self.logo, 150, 10, 1)
-        
-        for object in self.objects:
-            object.render()
+        self.uiManager.render_ui()
         
         
         

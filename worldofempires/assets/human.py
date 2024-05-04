@@ -14,6 +14,8 @@ def distance(point1, point2):
 hard_to_walk = [(50, 89, 38), (80, 143, 61), (22, 156, 233), (45, 166, 235)]
 original_step_size = 4
 
+available_resources = ["Tree", "Stone", "IronOre", "SilverOre", "GoldOre"]
+
 class Human(engine.BaseObject):
     def __init__(self, game, scene, x, y, country, homeland):
         super().__init__(game, scene, x, y)
@@ -41,14 +43,22 @@ class Human(engine.BaseObject):
 
         self.states = {'current_war': None,
                        'current_battle': None,
-                       'return_to_homeland': False}
+                       'return_to_homeland': False,
+                       'is_mining_resources': False,
+                       'can_mine_resources': False}
         
         self.temp_states = {}
+        def allow_mine_resources():
+            self.states['can_mine_resources'] = True
+
+        self.scene.eventManager.create_event(allow_mine_resources, 10)
 
         self.watch_radius = 25.0
         self.watch_radius_rect = pygame.Rect(self.rect.x - self.watch_radius, self.rect.y - self.watch_radius, self.watch_radius * 2, self.watch_radius * 2)
         
         self.directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        from ..custom_managers.inventoryManager import Inventory
+        self.inventory = Inventory(self, [])
     
     def render(self, add_x=0, add_y=0):
         self.screen.blit(self.surface, (self.rect.x + add_x, self.rect.y + add_y))
@@ -59,7 +69,7 @@ class Human(engine.BaseObject):
         war = self.states['current_war']
         current_battle = self.states['current_battle']
 
-        if self.move_to(current_battle.city):
+        if self._move_to(current_battle.city.rect):
 
             enemies = self.find_enemies()
             # print(f'Human from {self.country} found {len(enemies)} enemies')
@@ -97,19 +107,76 @@ class Human(engine.BaseObject):
             if "war_enemy_country" in self.temp_states:
                 pass
                 # print(f'[DEBUG] {self.country} Human: {self.temp_states["war_enemy_country"]=}')
+    
+    def mine_resources(self):
+        closest_object = None
+        closest_distance = 80
+        
+        if self.temp_states["mined_resources"] >= self.temp_states["mine_goal"]:
+            self.states['is_mining_resources'] = False
+            self.states['return_to_homeland'] = True
+            self.states['can_mine_resources'] = False
+            
+            def can_mine_res(): self.states['can_mine_resources'] = True
+            self.scene.eventManager.create_event(can_mine_res, random.randrange(60,120,15))
+
+        if not "mine_object" in self.temp_states:
+            self.temp_states["mine_object"] = None
+        
+        if self.temp_states['mine_object'] == None:
+            for resource in list(filter(lambda res: res.__class__.__name__==self.temp_states['resource_mine_type'], self.scene.resources)):
+                distance_to_object = distance(self, resource)
+                if distance_to_object < closest_distance:
+                    closest_object = resource
+                    self.temp_states['mine_object'] = closest_object
+                    closest_distance = distance_to_object
+
+        if self.temp_states['mine_object'] != None:
+            if self._move_to(self.temp_states['mine_object'].rect):
+                self.mine_resource(self.temp_states['mine_object'])
+        else:
+            if not 'mine_object_found_fail_times' in self.temp_states:
+                self.temp_states['mine_object_found_fail_times'] = 0
+                
+            self.temp_states['mine_object_found_fail_times'] += 1
+            
+            if self.temp_states['mine_object_found_fail_times'] > 10:
+                self.states['is_mining_resources'] = False
+                self.states['return_to_homeland'] = True
+                self.states['can_mine_resources'] = False
+                
+                def can_mine_res(): self.states['can_mine_resources'] = True
+                self.scene.eventManager.create_event(can_mine_res, random.randrange(60,120,15))
+    
+    def mine_resource(self, resource):
+        if self.temp_states['can_break']:
+            if not resource.durability <= 0:
+                resource.durability -= random.randint(1, 4)
+            else:
+                resource.destroy(self)
+            self.temp_states['can_break'] = False
+            
+            def make_breakable():
+                self.temp_states['can_break'] = True
+
+            self.scene.eventManager.create_event(make_breakable, 0.4)
                 
     def act(self):
         if self.states['current_war'] != None:
             self.act_war()
             return
         
+        elif self.states['is_mining_resources']:
+            self.mine_resources()
+            return
+        
         else:
             if self.states['return_to_homeland']:
-                if self.move_to_zone(self.homeland):
+                if self._move_to_zone(self.homeland):
                     self.states['return_to_homeland'] = False
                 return
             
-            actions, chances = ["move", "create_city"], [99, round(1 / self.game.fps, 3)]
+            actions, chances = ["move", "create_city", "mine_resources"], [95 * self.game.game_speed, round(1 / self.game.fps * self.game.game_speed, 3), round(4 / self.game.fps * self.game.game_speed, 3)]
             action = random.choices(actions, chances, k=1)[0]
 
             match action:
@@ -117,19 +184,44 @@ class Human(engine.BaseObject):
                     self.move()
                     
                 case "create_city":
-                    all_distances_above_80 = all([distance(self.rect, city) >= 80 for city in self.scene.cities])
+                    if not self.states['is_mining_resources'] and not self.states['return_to_homeland']:
+                        all_distances_above_80 = all([distance(self.rect, city) >= 80 for city in self.scene.cities])
 
-                    if all_distances_above_80:
-                        from .city import City
-                        city = City(self.game, self.scene, self.rect.x, self.rect.y, self.country, False)
-                        message = self.game.lang['onCityFound']
+                        if all_distances_above_80:
+                            from .city import City
+                            city = City(self.game, self.scene, self.rect.x, self.rect.y, self.country, False)
+                            message = self.game.lang['onCityFound']
 
-                        self.scene.notificationManager.add_notification(Notification(self.game, self.scene, message.format(self.country.name)))
-                        self.scene.events.append(Log(message.format(self.country.name)))
-                        self.country.cities.append(city)
-                        self.scene.cities.append(city)
+                            self.scene.notificationManager.add_notification(Notification(self.game, self.scene, message.format(self.country.name)))
+                            self.scene.events.append(Log(message.format(self.country.name)))
+                            self.country.cities.append(city)
+                            self.scene.cities.append(city)
 
-                        self.move()
+                            self.move()
+                
+                case "mine_resources":
+                    if self.states['can_mine_resources']:
+                    
+                        humans_mining = 0
+
+                        for human in self.country.humans:
+                            if human.states['is_mining_resources']:
+                                humans_mining += 1
+
+                            if humans_mining >= 3:
+                                self.move()
+                                break
+                            
+                        if self.country.king.states['is_mining_resources']: humans_mining += 1
+
+                        if not humans_mining >= 3:
+                            random_resource = random.choice(available_resources)
+                            self.states['is_mining_resources'] = not self.states['is_mining_resources']
+                            self.states['can_mine_resources'] = True
+                            self.temp_states["mine_goal"] = random.randrange(1, 8, 1)
+                            self.temp_states["mined_resources"] = 0
+                            self.temp_states['resource_mine_type'] = random_resource
+                            self.temp_states['can_break'] = True
 
                 case _:
                     self.move()
@@ -197,8 +289,8 @@ class Human(engine.BaseObject):
             self.step = original_step_size
 
         direction = random.choice(self.directions)
-        new_x = math.ceil(direction[0] * self.step * self.game.dt) if direction[0] > 0 else math.floor(direction[0] * self.step * self.game.dt)
-        new_y = math.ceil(direction[1] * self.step * self.game.dt) if direction[1] > 0 else math.floor(direction[1] * self.step * self.game.dt)
+        new_x = math.ceil(direction[0] * self.step * self.game.game_speed * self.game.dt) if direction[0] > 0 else math.floor(direction[0] * self.step * self.game.game_speed * self.game.dt)
+        new_y = math.ceil(direction[1] * self.step * self.game.game_speed * self.game.dt) if direction[1] > 0 else math.floor(direction[1] * self.step * self.game.game_speed * self.game.dt)
         
         new_pos = self.rect.move(new_x, new_y)  # Calculate the new position
         if self.can_move(new_pos):  # Check if the new position is valid
@@ -250,6 +342,35 @@ class Human(engine.BaseObject):
         self.rect.x = round(self.rect.x / self.step) * self.step
         self.rect.y = round(self.rect.y / self.step) * self.step
     
+    def _move_to_zone(self, rect):
+        if self.is_in_territory(rect):
+            return True
+
+        pos_a = pygame.Vector2(self.rect.x, self.rect.y)
+        pos_b = pygame.Vector2(rect.rect.x, rect.rect.y)
+        
+        terrain_color = self.scene.terrain.get_at((self.rect.x, self.rect.y))
+        if terrain_color in hard_to_walk:
+            self.step = original_step_size - 1
+        else:
+            self.step = original_step_size
+        
+        vel = self.step * self.game.dt * self.game.game_speed
+        vel = math.ceil(vel)
+        
+        # print(f'[DEBUG] HUMAN from {self.country} (1): {pos_a=}, {pos_b=}, {vel=}')
+        
+        pos_a = pos_a.move_towards(pos_b, vel)
+        # print(f'[DEBUG] HUMAN from {self.country} (2): {pos_a=}, {pos_b=}, {vel=}')
+        
+        pos_a.x, pos_a.y = round(pos_a.x, 0), round(pos_a.y, 0)
+        # print(f'[DEBUG] HUMAN from {self.country} (3): {pos_a=}, {pos_b=}, {vel=}')
+
+        self.rect.x, self.rect.y = pos_a.x, pos_a.y
+        # print(f'[DEBUG] HUMAN from {self.country} (4): {self.rect.x=}, {self.rect.y=}, {pos_b=}')
+        
+        return False
+    
     def move_to(self, rect):
         center1 = ((self.rect.x + self.size) / 2, (self.rect.y + self.size) / 2)
         center2 = ((rect.x + rect.size) / 2, (rect.y + rect.size) / 2)
@@ -264,8 +385,8 @@ class Human(engine.BaseObject):
             dx *= scale
             dy *= scale
 
-        self.rect.x = self.rect.x + dx
-        self.rect.y = self.rect.y + dy
+        self.rect.x += dx
+        self.rect.y += dy
         self.rect.x = round(self.rect.x / self.step) * self.step
         self.rect.y = round(self.rect.y / self.step) * self.step
 
@@ -273,6 +394,57 @@ class Human(engine.BaseObject):
             return True
         else:
             return False
+    
+    def _move_to(self, rect):
+        # center1 = ((self.rect.x + self.size) / 2, (self.rect.y + self.size) / 2)
+        # center2 = ((rect.x + rect.width) / 2, (rect.y + rect.height) / 2)
+    
+        # dx = center2[0] - center1[0]
+        # dy = center2[1] - center1[1]
+    
+        # distance = math.sqrt(dx ** 2 + dy ** 2)
+    
+        # if distance > self.step * self.game.dt:
+        #     scale = min(self.step * self.game.dt, distance) / distance
+        #     dx *= scale
+        #     dy *= scale
+    
+        # self.rect.x += dx
+        # self.rect.y += dy
+        # self.rect.x = round(self.rect.x / self.step) * self.step * self.game.dt
+        # self.rect.y = round(self.rect.y / self.step) * self.step * self.game.dt
+    
+        # if distance <= self.step:
+        #     return True
+        # else:
+        #     return False
+        
+        pos_a = pygame.Vector2(self.rect.x, self.rect.y)
+        pos_b = pygame.Vector2(rect.x, rect.y)
+        
+        terrain_color = self.scene.terrain.get_at((self.rect.x, self.rect.y))
+        if terrain_color in hard_to_walk:
+            self.step = original_step_size - 1
+        else:
+            self.step = original_step_size
+        
+        vel = self.step * self.game.dt * self.game.game_speed
+        vel = math.ceil(vel)
+        
+        # print(f'[DEBUG] HUMAN from {self.country} (1): {pos_a=}, {pos_b=}, {vel=}')
+        
+        pos_a = pos_a.move_towards(pos_b, vel)
+        # print(f'[DEBUG] HUMAN from {self.country} (2): {pos_a=}, {pos_b=}, {vel=}')
+        
+        pos_a.x, pos_a.y = round(pos_a.x, 0), round(pos_a.y, 0)
+        # print(f'[DEBUG] HUMAN from {self.country} (3): {pos_a=}, {pos_b=}, {vel=}')
+
+        self.rect.x, self.rect.y = pos_a.x, pos_a.y
+        # print(f'[DEBUG] HUMAN from {self.country} (4): {self.rect.x=}, {self.rect.y=}, {pos_b=}')
+        
+        if (self.rect.x, self.rect.y) == (rect.x, rect.y):
+            return True
+        return False
     
     def attack(self, enemy):
         enemy.hp -= round(random.uniform(self.damage['min'], self.damage['max']), 2)

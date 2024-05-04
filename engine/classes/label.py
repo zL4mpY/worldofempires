@@ -23,7 +23,12 @@ class Label():
         self.fontsize = fontsize
         self.color = color 
         self.side, self.align = side, align     
-             
+    
+    def update(self):
+        pass
+    
+    def handle_event(self, event):
+        pass
     
     def render(self):
         self.game.textManager.render(surface=self.screen,

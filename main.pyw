@@ -3,6 +3,7 @@ from worldofempires.scenes.main_menu import MenuScene
 from worldofempires.scenes.loading_screen import LoadingScene
 from worldofempires.scenes.map_settings_menu import MapSettingsMenuScene
 from worldofempires.scenes.game_settings_menu import GameSettingsMenuScene
+from worldofempires.custom_managers.itemManager import ItemManager
 import engine
 import pygame
 
@@ -14,10 +15,11 @@ class Game(engine.LumixGame):
  
         self.settingsManager.load_settings(path="settings.json")
         self.is_devmode = self.settingsManager.get("dev_mode")
-        self.VERSION = "0.0.6 ALPHA"
+        self.VERSION = "0.0.7 ALPHA"
 
         self.set_resolution(self.settingsManager.get_resolution())
         self.fps = self.settingsManager.get_fps()
+        self.game_speed = 1
         self.fullscreen = self.settingsManager.get('fullscreen')
         
         if not self.fullscreen:
@@ -42,7 +44,7 @@ class Game(engine.LumixGame):
         self.sceneManager.add_scene("menu", MenuScene(self, "menu"))
         
         self.sceneManager.switch_scene('menu')
-        self.eventManager.add_keyboard_event('F11', self.set_fullscreen)
+        # self.eventManager.add_keyboard_event('F11', self.set_fullscreen)
         
         self.is_running = True
     

@@ -5,6 +5,7 @@ from engine.managers.imageManager import ImageManager
 from engine.managers.textManager import TextManager
 from engine.managers.eventManager import EventManager, Event, get_pygame_key
 from engine.managers.displayManager import DisplayManager
+from engine.managers.loggingManager import LoggingManager
 from engine.managers.cameraManager import CameraManager
 
 from pathlib import Path
@@ -29,31 +30,69 @@ def in_dict(item, dict):
     return False
 
 def get_align(align: str) -> str:
-    if align == "c":
+    if align == "c" or align == "center":
         align = 'center'
-    elif align == 't':
+    elif align == 't' or align == "top":
         align = 'top'
-    elif align == 'b':
-        align = 'b'
-    elif align == 'l':
+    elif align == 'b' or align == "bottom":
+        align = 'bottom'
+    elif align == 'l' or align == "left":
         align = 'left'
-    elif align == 'r':
+    elif align == 'r' or align == "right":
         align = 'right'
-    elif align == 'tl':
+    elif align == 'tl' or align == "topleft":
         align = 'topleft'
-    elif align == 'tr':
+    elif align == 'tr' or align == "topright":
         align = 'topright'
-    elif align == 'bl':
+    elif align == 'bl' or align == "bottomleft":
         align = 'bottomleft'
-    elif align == 'br':
+    elif align == 'br' or align == "bottomright":
         align = 'bottomright'
-    elif align == 'cl':
+    elif align == 'cl' or align == "centerleft":
         align = 'centerleft'
-    elif align == 'cr':
+    elif align == 'cr' or align == "centerright":
         align = 'centerright'
     else:
         align = 'center'
     return align
+
+def set_align_add(align, rect, add_x, add_y, x, y):
+    if align == 'left':
+        setattr(rect, align, x-add_x)
+    
+    elif align == 'right':
+        setattr(rect, align, x+add_x)
+        
+    elif align == 'top':
+        setattr(rect, align, y-add_y)
+    
+    elif align == 'bottom':
+        setattr(rect, align, y-add_y*3)
+        
+    elif align == 'center':
+        setattr(rect, align, (x-add_x, y-add_y*2))
+    
+    elif align == 'centerleft':
+        setattr(rect, "center", (x-add_x, y-add_y*2))
+        setattr(rect, "left", x-add_x)
+    
+    elif align == 'centerright':
+        setattr(rect, "center", (x+add_x, y+add_y*2))
+        setattr(rect, "left", x+add_x)
+    
+    elif align == 'topleft':
+        setattr(rect, align, (x-add_x, y-add_y))
+    
+    elif align == 'topright':
+        setattr(rect, align, (x+add_x, y-add_y))
+    
+    elif align == 'bottomleft':
+        setattr(rect, align, (x-add_x, y-add_y*3))
+    
+    elif align == 'bottomright':
+        setattr(rect, align, (x+add_x, y-add_y*3))
+    
+    return (rect.x, rect.y)
 
 def set_align(align, rect, x, y):
     if align in ['topleft', 'topright', 'bottomleft', 'bottomright', 'center']:
@@ -68,6 +107,8 @@ def set_align(align, rect, x, y):
     elif align in 'centerright':
         setattr(rect, 'center', (x, y))
         setattr(rect, 'right', x)
+    
+    return (rect.x, rect.y)
 
 class BaseObject():
     """
@@ -106,36 +147,75 @@ class LumixGame():
         
         """
         
+        self.loggingManager = LoggingManager(self)
+        self.loggingManager.log("LoggingManager initialized!", "INFO")
+        
         pygame.init()
+        
+        self.loggingManager.log("Pygame initialized!", "INFO")
+        
         traceback_gui.set_hook()
         
-        self.engineSettings = SettingsManager().load_settings(BASE_DIR / "engine" / ".settings")
-        self.fill_color = self.engineSettings.get("fill-color")
+        self.loggingManager.log("Custom traceback hook set!", "INFO")
         
-        self.settingsManager = SettingsManager()
-        self.displayManager = DisplayManager()
-        self.sceneManager = SceneManager()
-        self.languageManager = LanguageManager()
-        self.eventManager = EventManager()
+        self.engineSettings = SettingsManager(self).load_settings(BASE_DIR / "engine" / ".settings")
+        
+        self.loggingManager.log("Loaded engine settings!", "INFO")
+        
+        self.fill_color = self.engineSettings.get("fill-color")
+        self.game_speed = 1
+        
+        self.loggingManager.log("Default screen fill color set!", "INFO")
+        
+        self.settingsManager = SettingsManager(self)
+        self.displayManager = DisplayManager(self)
+        self.sceneManager = SceneManager(self)
+        self.languageManager = LanguageManager(self)
+        self.eventManager = EventManager(self)
         self.textManager = TextManager(self)
         self.imageManager = ImageManager(self)
+
         self.dt = 0
+        self.loggingManager.log("Default deltatime set to 0!", "INFO")
         
         self.fps = self.displayManager.get_refresh_rate()
+        
+        self.loggingManager.log("Default FPS set to user's refresh rate!", "INFO")
+        
         self.resolution = self.displayManager.get_resolution()
+        
+        self.loggingManager.log("Default resolution set to user's screen resolution!", "INFO")
+        
         self.width, self.height = self.resolution
         
+        self.loggingManager.log("Default width and height set to user's screen resolution!", "INFO")
+        
         self.fullscreen = False
+        self.loggingManager.log("Fullscreen state set to False!", "INFO")
+        
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(0, self.height // 5 - self.height // 15)
+        self.loggingManager.log("Set program's default place on screen!", "INFO")
+        
         self.screen = pygame.display.set_mode(size=self.resolution, flags=0)
+        self.loggingManager.log("Screen initialized!", "INFO")
+        
         self.clock = pygame.time.Clock()
+        self.loggingManager.log("Clock initialized!", "INFO")
+        
         self.title = "Lumix.py project"
+        self.loggingManager.log(f"Default title set to {self.title}!", "INFO")
+        
         self.icon = None
+        self.loggingManager.log(f"Default icon set to {self.icon}!", "INFO")
         
         pygame.display.set_caption(self.title)
+        self.loggingManager.log(f"Pygame title set to {self.title}!", "INFO")
         
         self.eventManager.set_start_time(time=time.time())
+        self.loggingManager.log(f"Set start time to {self.eventManager.get_start_time()}!", "INFO")
+        
         self.is_running = True
+        self.loggingManager.log(f"Set program as running!", "INFO")
     
     def set_screen(self, size: tuple[int] | list[int], fullscreen: bool = False, max_fps: int = 60) -> None:
         """
@@ -196,17 +276,21 @@ class LumixGame():
                             custom_event.run()
 
                 current_scene.handle_event(event)
+            current_scene.eventManager.run_events()
 
             current_scene.update()
             current_scene.render()
 
             pygame.display.flip()
-            dt = self.clock.tick(self.fps) / 1000
+            dt = self.clock.tick(self.fps * self.game_speed * 2) / 1000
             self.dt = dt
+        
+        self.loggingManager.save_logs()
             
     
     def exit(self):
         self.is_running = False
     
     def restart(self):
+        self.loggingManager.log("The game has restarted!", "INFO")
         self.__init__()

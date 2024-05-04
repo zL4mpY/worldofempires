@@ -7,8 +7,9 @@ class DisplayManager():
     
     """
     
-    def __init__(self):
-        pass
+    def __init__(self, game):
+        self.game = game
+        self.game.loggingManager.log(f'DisplayManager initialized!', 'INFO')
     
     def get_refresh_rate(self) -> int:
         """
